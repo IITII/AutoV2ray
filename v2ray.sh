@@ -75,7 +75,7 @@ help() {
   $0 -t:                   Install, default \"$installMode\"
     $0 -t 1                Install server
     $0 -t 2                Install client
-  $0 -w servrName          web site servername
+  $0 -w                    siteName
   $0 -l, --log logFilePath logFilePath
                               default \"$logPath\"
   $0 -v                    verbose
@@ -179,79 +179,38 @@ client() {
   fi
 }
 # "s/\"id\": \"\S\+/\"id\": \"$SED\"/g"
-main() {
-  check_root
 
-  check_release
-  # pre-check
-  check_command getopt $release $GETOPT_PACKAGE_NAME
-  check_command base64 $release $BASE64_PACKAGE_NAME
-  check_command tee $release $BASE64_PACKAGE_NAME
-  check_command git $release git
-  if [ "$release" = "centos" ]; then
-    check_command uuidgen $release util-linux
-  else
-    check_command uuidgen $release uuid-runtime
-  fi
+check_root
+if [ -z "$1" ]; then
+  help
+  exit 1
+fi
+check_release
+# pre-check
+check_command getopt $release $GETOPT_PACKAGE_NAME
+check_command base64 $release $BASE64_PACKAGE_NAME
+check_command tee $release $BASE64_PACKAGE_NAME
+check_command git $release git
+if [ "$release" = "centos" ]; then
+  check_command uuidgen $release util-linux
+else
+  check_command uuidgen $release uuid-runtime
+fi
 
-  ARGS=$(getopt -a -o hvt:w:l:p:u: -l log:,help,path,ddns: -- "$@")
-  #set -- "${ARGS}"
-  eval set -- "${ARGS}"
-  while [ -n $1 ]; do
-    #log "\$@: $@"
-    case "$1" in
-    -t)
-      case $2 in
-      1)
-        installMode="server"
-        ;;
-      2)
-        installMode="client"
-        ;;
-      *)
-        log "unkonw argument"
-        exit 1
-        ;;
-      esac
-      shift
+ARGS=$(getopt -a -o hvt:w:l:p:u: -l log:,help,path,ddns: -- "$@")
+#set -- "${ARGS}"
+#log "\$@: $@"
+eval set -- "${ARGS}"
+while [ -n $1 ]; do
+  #log "\$@: $@"
+  case "$1" in
+  -t)
+    case $2 in
+    1)
+      installMode="server"
       ;;
-    -w)
-      if [ -n $2 ]; then
-        siteName="$2"
-      else
-        log "SiteName can not be empty!!!"
-      fi
-      shift
-      ;;
-    -l | --log)
-      if [ -z $2 ]; then
-        logPath="$2"
-      else
-        log "logPath can not be empty!!!"
-      fi
-      shift
-      ;;
-    -v)
-      log_Path=""
-      ;;
-    -h | --help)
-      help
-      ;;
-    -p | --path)
-      wsPath="$2"
-      shift
-      ;;
-    -u)
-      uuid="$2"
-      shift
-      ;;
-    --ddns)
-      he_net_ddns_key="$2"
-      shift
-      ;;
-    --)
-      shift
-      break
+    2)
+      installMode="client"
       ;;
     *)
       log "unkonw argument"
@@ -259,45 +218,84 @@ main() {
       ;;
     esac
     shift
-  done
-  # check sitename
-  if [ -z $siteName ]; then
-    log "SiteName can not be empty!!!"
-    exit 1
-  fi
-  # check he_net_ddns_key
-  if [ -z $he_net_ddns_key ]; then
-    log "$ddns_key can not be empty!!!"
-    exit 1
-  fi
-
-  # check value
-  default_value wsPath $(/bin/date +"%S" | base64)
-  default_value uuid $(/usr/bin/uuidgen -t)
-  default_value sslPath "/etc/nginx/ssl/$siteName"
-
-  # install
-  git_clone $repoAddr $repoName
-  case "$installMode" in
-  server)
-    log "Installing server..."
-    server $uuid $wsPath $siteName $webROOT $sslPath $he_net_ddns_key
     ;;
-  client)
-    log "Installing client..."
-    client $uuid $wsPath $siteName
+  -w)
+    if [ -n $2 ]; then
+      siteName="$2"
+    else
+      log "SiteName can not be empty!!!"
+    fi
+    shift
+    ;;
+  -l | --log)
+    if [ -z $2 ]; then
+      logPath="$2"
+    else
+      log "logPath can not be empty!!!"
+    fi
+    shift
+    ;;
+  -v)
+    log_Path=""
+    ;;
+  -h | --help)
+    help
+    ;;
+  -p | --path)
+    wsPath="$2"
+    shift
+    ;;
+  -u)
+    uuid="$2"
+    shift
+    ;;
+  --ddns)
+    he_net_ddns_key="$2"
+    shift
+    ;;
+  --)
+    shift
+    break
+    ;;
+  *)
+    log "unkonw argument"
+    exit 1
     ;;
   esac
-  if [ $? -eq 0 ]; then
-    log "Install successful!!!"
-    exit 0
-  else
-    log "Install failed..."
-    exit 1
-  fi
-}
-if [ -z "$1" ]; then
-  help
+  shift
+done
+# check sitename
+if [ -z $siteName ]; then
+  log "SiteName can not be empty!!!"
   exit 1
 fi
-main
+# check he_net_ddns_key
+if [ -z $he_net_ddns_key ]; then
+  log "$ddns_key can not be empty!!!"
+  exit 1
+fi
+
+# check value
+default_value wsPath $(/bin/date +"%S" | base64)
+default_value uuid $(/usr/bin/uuidgen -t)
+default_value sslPath "/etc/nginx/ssl/$siteName"
+
+# install
+git_clone $repoAddr $repoName
+case "$installMode" in
+server)
+  log "Installing server..."
+  server $uuid $wsPath $siteName $webROOT $sslPath $he_net_ddns_key
+  ;;
+client)
+  log "Installing client..."
+  client $uuid $wsPath $siteName
+  ;;
+esac
+if [ $? -eq 0 ]; then
+  log "Install successful!!!"
+  exit 0
+else
+  log "Install failed..."
+  exit 1
+fi
