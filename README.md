@@ -1,2 +1,2 @@
 # AutoV2ray
-let v2ray config automatic ( TLS+NGINX+WEB )
+> let v2ray configure automatic ( TLS+NGINX+WEB )

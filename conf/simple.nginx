@@ -1,0 +1,9 @@
+server {
+    listen 80 default_server;
+    server_name _;
+    location / {
+        root /var/www/html;
+        # alias /usr/share/nginx/html;
+        index index.html index.htm;
+    }
+}
