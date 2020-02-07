@@ -181,10 +181,6 @@ client() {
 # "s/\"id\": \"\S\+/\"id\": \"$SED\"/g"
 main() {
   check_root
-  if [ -z "$1" ]; then
-    help
-    exit 1
-  fi
 
   check_release
   # pre-check
@@ -300,4 +296,8 @@ main() {
     exit 1
   fi
 }
+if [ -z "$1" ]; then
+  help
+  exit 1
+fi
 main
