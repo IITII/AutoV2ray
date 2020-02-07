@@ -133,7 +133,7 @@ server() {
       -e "s/ssl_certificate \S\+/ssl_certificate \/etc\/nginx\/ssl\/$3\/fullchain.cer;/g" \
       -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/key.key;/g" \
       -e "s/location \/china \S\+/location \/$2;/g" \
-      -e "s/root \S\+/root $4;/g" |
+      -e "s/root \S\+/root \/var\/www\/FileList;/g" |
       tee >/etc/nginx/sites-available/default &&
       log "success"
 
