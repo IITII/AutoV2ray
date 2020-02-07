@@ -152,7 +152,7 @@ server() {
     eval nginx -s reload $log_Path && log "success"
     log "Reload v2ray..."
     #Then reload v2ray
-    systemctl restart v2ray && log "Reload successful!!!" && log "Server installation finished!!!"
+    systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
   else
     log "Install v2ray failed!!!"
     exit 1
@@ -172,7 +172,7 @@ client() {
       -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" |
       tee >/etc/v2ray/config.json &&
       log "success" &&
-
+      systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
   else
     log "Install v2ray failed!!!"
     exit 1
