@@ -282,6 +282,7 @@ default_value sslPath "/etc/nginx/ssl/$siteName"
 
 # install
 git_clone $repoAddr $repoName
+cd ~/$repoName
 case "$installMode" in
 server)
   log "Installing server..."
