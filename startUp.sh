@@ -63,10 +63,8 @@ check_command() {
     fi
 }
 main() {
-    cd /root/
-    git clone https://github.com/iitii/autov2ray AutoV2ray
-    cd AutoV2ray \
-        && cd AutoV2ray \
+    git clone https://github.com/iitii/autov2ray /root/AutoV2ray
+    cd /root/AutoV2ray \
         && bash v2ray.sh -t $INSTALL_MODE -w $SITE_NAME --ddns $DDNS_KEY -p $WS_PATH -u $UUID \
          >> /var/log/v2ray_install.log
 }
