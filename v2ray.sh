@@ -23,7 +23,7 @@ declare siteRepoName="FileList"
 declare siteRepoAddr="https://github.com/IITII/FileList"
 
 log() {
-    echo $(/bin/date +"%Z %Y-%m-%d %H:%M:%S"): $1
+    echo -e "[$(/bin/date)] $1"
 }
 check_command() {
     if ! command -v $1 > /dev/null 2>&1; then

@@ -12,7 +12,7 @@ declare release="ubuntu"
 declare SLEEP_TIME=3
 declare SSL_PATH="/etc/nginx/ssl/"
 log() {
-    echo -e "$(/bin/date +"%Z %Y-%m-%d %H:%M:%S"): $1"
+    echo -e "[$(/bin/date)] $1"
 }
 help() {
     echo "Usage: $0 example.site site_ddns_key
