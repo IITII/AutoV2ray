@@ -149,6 +149,40 @@ pre_check_var() {
         ;;
     esac
 }
+firewall_rule() {
+    case "$installMode" in
+    server)
+        log "Adding server iptable rules..."
+        if [ "$release" = "centos" ]; then
+            systemctl stop firewalld.service
+            systemctl disable firewalld.service
+        else
+            ufw allow 22 >/dev/null 2>&1
+            ufw allow 80 >/dev/null 2>&1
+            ufw allow 443 >/dev/null 2>&1
+            ufw reload
+        fi
+        iptables -A INPUT -p tcp -m multiport --dports 22,80,443 -j ACCEPT
+        iptables -A OUTPUT -p tcp -m multiport --sports 22,80,443 -j ACCEPT
+        ;;
+    client)
+        log "Adding client iptable rules..."
+        if [ "$release" = "centos" ]; then
+            systemctl stop firewalld.service
+            systemctl disable firewalld.service
+        else
+            ufw allow 22 >/dev/null 2>&1
+            ufw allow 7878 >/dev/null 2>&1
+            ufw allow 10809 >/dev/null 2>&1
+            ufw reload
+        fi
+        iptables -A INPUT -p tcp -m multiport --dports 22,7878,10809 -j ACCEPT
+        iptables -A OUTPUT -p tcp -m multiport --sports 22,7878,10809 -j ACCEPT
+        iptables -A OUTPUT -p udp -m multiport --sports 7878 -j ACCEPT
+        ;;
+    esac
+    log "Finished!!!"
+}
 server() {
     #echo $@
     log "Install main program..."
@@ -179,23 +213,21 @@ server() {
 
         log "Modifing v2ray config file"
         /bin/cat conf/server.json | /bin/sed \
-            -e "s/\"id\": \"\S\+/\"id\": \"$1\"/g" \
+            -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
             -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
             | tee >/etc/v2ray/config.json \
             && log "success"
-        eval git clone $siteRepoAddr $siteRepoName >/dev/null 2>&1
-        cd ~/ && cp -R $siteRepoName $webROOT \
-            &&
-            
-
-            # Reload nginx first
-            log "Testing nginx config..."
+        cd ~/ \
+            && eval git clone $siteRepoAddr $siteRepoName >/dev/null 2>&1
+        cp -R $siteRepoName $webROOT \
+            && log "Testing nginx config..."
         nginx -t >/dev/null 2>&1 && log "success"
         log "Reload nginx..."
         nginx -s reload >/dev/null 2>&1 && log "success"
         log "Reload v2ray..."
         #Then reload v2ray
         systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
+        firewall_rule
     else
         log "Install v2ray failed!!!"
         exit 1
@@ -216,6 +248,7 @@ client() {
             | tee >/etc/v2ray/config.json \
             && log "success" \
             && systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
+        firewall_rule
     else
         log "Install v2ray failed!!!"
         exit 1
