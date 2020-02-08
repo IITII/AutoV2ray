@@ -126,5 +126,5 @@ check_release
 main \
     && acme_sh \
     && log "Generate ssl file success" \
-    && check_command tree $release tree
-tree $SSL_PATH$siteName
+    && check_command tree $release tree \
+    && tree $SSL_PATH$siteName

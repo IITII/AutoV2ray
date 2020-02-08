@@ -3,7 +3,7 @@
 
 **[简体中文](https://iitii.github.io/2020/02/08/1/)**
 ### Pre-check
-1. A [dns.he.net](dns.he.net) Account and at least have one domain on it
+1. A [dns.he.net](http://dns.he.net) Account and at least have one domain on it
 2. A domain on dns.he.net which had configure ddns
 3. A clean linux server
 4. Some basic knowledge of operating Linux

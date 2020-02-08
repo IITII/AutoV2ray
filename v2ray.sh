@@ -102,9 +102,9 @@ pre_check_var() {
     server)
         log "Check server's necessary variable..."
         if [ -z $uuid ]; then
-            log "wsPath is Empty, Generating..."
+            log "uuid is Empty, Generating..."
             uuid=$(/usr/bin/uuidgen -t)
-            log "Now wsPath is $uuid"
+            log "Now uuid is $uuid"
         fi
         if [ -z $wsPath ]; then
             log "wsPath is Empty, Generating..."
@@ -117,9 +117,9 @@ pre_check_var() {
             exit 1
         fi
         if [ -z $sslPath ]; then
-            log "wsPath is Empty, Generating..."
+            log "sslPath is Empty, Generating..."
             sslPath="/etc/nginx/ssl/$siteName"
-            log "Now wsPath is $siteName"
+            log "Now sslPath is $siteName"
         fi
         # check he_net_ddns_key
         if [ -z $he_net_ddns_key ]; then
