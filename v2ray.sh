@@ -97,8 +97,60 @@ git_clone() {
         && eval /usr/bin/git clone $1 $2 \
         && cd $2
 }
+pre_check_var() {
+    case "$installMode" in
+    server)
+        log "Check server's necessary variable..."
+        if [ -z $uuid ]; then
+            log "wsPath is Empty, Generating..."
+            uuid=$(/usr/bin/uuidgen -t)
+            log "Now wsPath is $uuid"
+        fi
+        if [ -z $wsPath ]; then
+            log "wsPath is Empty, Generating..."
+            wsPath=$(/bin/date +"%S" | base64)
+            log "Now wsPath is $wsPath"
+        fi
+        # check sitename
+        if [ -z $siteName ]; then
+            log "SiteName can not be empty!!!"
+            exit 1
+        fi
+        if [ -z $sslPath ]; then
+            log "wsPath is Empty, Generating..."
+            sslPath="/etc/nginx/ssl/$siteName"
+            log "Now wsPath is $siteName"
+        fi
+        # check he_net_ddns_key
+        if [ -z $he_net_ddns_key ]; then
+            log "$ddns_key can not be empty!!!"
+            exit 1
+        fi
+        log "Now: server variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName, webROOT: $webROOT , sslPath: $sslPath , he_net_ddns_key: $he_net_ddns_key"
+        ;;
+    client)
+        log "Check client's necessary variable..."
+        if [ -z $uuid ]; then
+            log "wsPath is Empty, Generating..."
+            uuid=$(/usr/bin/uuidgen -t)
+            log "Now wsPath is $uuid"
+        fi
+        if [ -z $wsPath ]; then
+            log "wsPath is Empty, Generating..."
+            wsPath=$(/bin/date +"%S" | base64)
+            log "Now wsPath is $wsPath"
+        fi
+        # check sitename
+        if [ -z $siteName ]; then
+            log "SiteName can not be empty!!!"
+            exit 1
+        fi
+        log "Now: client variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName"
+        ;;
+    esac
+}
 server() {
-    echo $@
+    #echo $@
     log "Install main program..."
     bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
     if [ $? -eq 0 ]; then
@@ -121,8 +173,8 @@ server() {
             -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/key.key;/g" \
             -e "s/location \/china \S\+/location \/$2 {/g" \
             -e "s/root \S\+/root \/var\/www\/FileList;/g" \
-            -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1)"
-        >/etc/nginx/sites-available/default \
+            -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1);/g" \
+            >/etc/nginx/sites-available/default \
             && log "success"
 
         log "Modifing v2ray config file"
@@ -150,7 +202,7 @@ server() {
     fi
 }
 client() {
-    echo $@
+    #echo $@
     log "Install main program..."
     bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
     if [ $? -eq 0 ]; then
@@ -159,7 +211,7 @@ client() {
         log "Modifing v2ray config file"
         /bin/cat conf/client.json | /bin/sed \
             -e "s/\"address\": \"baidu.com\"/\"address\": \"$3\"/g" \
-            -e "s/\"id\": \"\S\+/\"id\": \"$1\"/g" \
+            -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
             -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
             | tee >/etc/v2ray/config.json \
             && log "success" \
@@ -244,28 +296,10 @@ while [ -n $1 ]; do
     esac
     shift
 done
-# check sitename
-if [ -z $siteName ]; then
-    log "SiteName can not be empty!!!"
-    exit 1
-fi
-# check he_net_ddns_key
-if [ -z $he_net_ddns_key ]; then
-    log "$ddns_key can not be empty!!!"
-    exit 1
-fi
 
 # check value
 # if value is null or "", just give them a random value
-if [ -z $wsPath ]; then
-    wsPath=$(/bin/date +"%S" | base64)
-fi
-if [ -z $uuid ]; then
-    uuid=$(/usr/bin/uuidgen -t)
-fi
-if [ -z $sslPath ]; then
-    sslPath="/etc/nginx/ssl/$siteName"
-fi
+pre_check_var
 
 # install
 git_clone $repoAddr $repoName

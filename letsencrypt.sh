@@ -111,9 +111,9 @@ main() {
     log "Update DDNS Record..."
     check_command curl $release curl
     curl -4 "https://$siteName:$he_net_ddns_key@dyn.dns.he.net/nic/update?hostname=$siteName" >/dev/null 2>&1 \
-        && log "Update DDNS Record successful!!!" \
         && log "Sleep $SLEEP_TIME s --> Time for dns record update." \
-        && sleep $SLEEP_TIME
+        && sleep $SLEEP_TIME \
+        && log "Update DDNS Record successful!!!"
     check_path $SSL_PATH$siteName
 }
 # run
