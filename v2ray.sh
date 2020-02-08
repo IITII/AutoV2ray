@@ -13,10 +13,6 @@ declare uuid=""
 declare he_net_ddns_key=""
 declare installMode="server"
 
-declare LOG_PARAM="2>&1"
-declare logPath="/dev/null"
-declare log_Path="> $logPath $LOG_PARAM"
-
 declare release="ubuntu"
 declare GETOPT_PACKAGE_NAME="util-linux"
 declare BASE64_PACKAGE_NAME="coreutils"
@@ -30,14 +26,14 @@ log() {
     echo $(/bin/date +"%Z %Y-%m-%d %H:%M:%S"): $1
 }
 check_command() {
-    if ! eval command -v $1 $log_Path; then
+    if ! command -v $1 > /dev/null 2>&1; then
         log "Installing $1 from $release repo"
         if [ "$2" = "centos" ]; then
-            eval sudo yum update $log_Path
-            eval sudo yum -y install $3 $log_Path
+            sudo yum update > /dev/null 2>&1
+            sudo yum -y install $3 > /dev/null 2>&1
         else
-            eval sudo apt-get update $log_Path
-            eval sudo apt-get install $3 -y $log_Path
+            sudo apt-get update > /dev/null 2>&1
+            sudo apt-get install $3 -y > /dev/null 2>&1
         fi
         if [ $? -eq 0 ]; then
             log "Install $3 successful!!!"
@@ -76,9 +72,6 @@ help() {
     $0 -t 1                Install server
     $0 -t 2                Install client
   $0 -w                    siteName
-  $0 -l, --log logFilePath logFilePath
-                              default \"$logPath\"
-  $0 -v                    verbose
   $0 -p, --path            v2ray web socket path
                               default \"/bin/date +\"%S\" | /usr/bin/base64\"
   $0 -u                    v2ray uuid
@@ -99,12 +92,6 @@ check_path() {
         log "Existed !"
     fi
 }
-default_value() {
-    if [ -z $1 ]; then
-        echo $@
-        eval $1=$2
-    fi
-}
 git_clone() {
     cd ~/ \
         && eval /usr/bin/git clone $1 $2 \
@@ -113,11 +100,11 @@ git_clone() {
 server() {
     echo $@
     log "Install main program..."
-    eval bash <(curl -L -s https://install.direct/go.sh) $log_Path
+    bash <(curl -L -s https://install.direct/go.sh) > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         log "Install v2ray successful!!!"
         log "Generating $3 ssl file..."
-        bash ./letsencrypt.sh $3 $6 $log_Path
+        bash ./letsencrypt.sh $3 $6
         log "Modifing config file..."
         log "Modifing nginx config file"
         # function foo() {
@@ -143,14 +130,14 @@ server() {
             -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
             | tee >/etc/v2ray/config.json \
             && log "success"
-        eval git clone $siteRepoAddr $siteRepoName $log_Path
+        eval git clone $siteRepoAddr $siteRepoName > /dev/null 2>&1
         cd ~/ && cp -R $siteRepoName $webROOT \
             &&
             # Reload nginx first
             log "Testing nginx config..."
-        eval nginx -t $log_Path && log "success"
+        nginx -t > /dev/null 2>&1 && log "success"
         log "Reload nginx..."
-        eval nginx -s reload $log_Path && log "success"
+        nginx -s reload > /dev/null 2>&1 && log "success"
         log "Reload v2ray..."
         #Then reload v2ray
         systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
@@ -162,7 +149,7 @@ server() {
 client() {
     echo $@
     log "Install main program..."
-    eval bash <(curl -L -s https://install.direct/go.sh) $log_Path
+    bash <(curl -L -s https://install.direct/go.sh) > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         log "Install v2ray successful!!!"
         log "Modifing config file..."
@@ -227,17 +214,6 @@ while [ -n $1 ]; do
             log "SiteName can not be empty!!!"
         fi
         shift
-        ;;
-    -l | --log)
-        if [ -z $2 ]; then
-            logPath="$2"
-        else
-            log "logPath can not be empty!!!"
-        fi
-        shift
-        ;;
-    -v)
-        log_Path=""
         ;;
     -h | --help)
         help
