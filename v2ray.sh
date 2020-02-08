@@ -26,14 +26,14 @@ log() {
     echo -e "[$(/bin/date)] $1"
 }
 check_command() {
-    if ! command -v $1 > /dev/null 2>&1; then
+    if ! command -v $1 >/dev/null 2>&1; then
         log "Installing $1 from $release repo"
         if [ "$2" = "centos" ]; then
-            sudo yum update > /dev/null 2>&1
-            sudo yum -y install $3 > /dev/null 2>&1
+            sudo yum update >/dev/null 2>&1
+            sudo yum -y install $3 >/dev/null 2>&1
         else
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install $3 -y > /dev/null 2>&1
+            sudo apt-get update >/dev/null 2>&1
+            sudo apt-get install $3 -y >/dev/null 2>&1
         fi
         if [ $? -eq 0 ]; then
             log "Install $3 successful!!!"
@@ -100,7 +100,7 @@ git_clone() {
 server() {
     echo $@
     log "Install main program..."
-    bash <(curl -L -s https://install.direct/go.sh) > /dev/null 2>&1
+    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         log "Install v2ray successful!!!"
         log "Generating $3 ssl file..."
@@ -119,9 +119,10 @@ server() {
             -e "s/server_name \S\+/server_name $3;/g" \
             -e "s/ssl_certificate \S\+/ssl_certificate \/etc\/nginx\/ssl\/$3\/fullchain.cer;/g" \
             -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/key.key;/g" \
-            -e "s/location \/china \S\+/location \/$2;/g" \
+            -e "s/location \/china \S\+/location \/$2 {/g" \
             -e "s/root \S\+/root \/var\/www\/FileList;/g" \
-            | tee >/etc/nginx/sites-available/default \
+            -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1)"
+        >/etc/nginx/sites-available/default \
             && log "success"
 
         log "Modifing v2ray config file"
@@ -130,14 +131,16 @@ server() {
             -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
             | tee >/etc/v2ray/config.json \
             && log "success"
-        eval git clone $siteRepoAddr $siteRepoName > /dev/null 2>&1
+        eval git clone $siteRepoAddr $siteRepoName >/dev/null 2>&1
         cd ~/ && cp -R $siteRepoName $webROOT \
             &&
+            
+
             # Reload nginx first
             log "Testing nginx config..."
-        nginx -t > /dev/null 2>&1 && log "success"
+        nginx -t >/dev/null 2>&1 && log "success"
         log "Reload nginx..."
-        nginx -s reload > /dev/null 2>&1 && log "success"
+        nginx -s reload >/dev/null 2>&1 && log "success"
         log "Reload v2ray..."
         #Then reload v2ray
         systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
@@ -149,7 +152,7 @@ server() {
 client() {
     echo $@
     log "Install main program..."
-    bash <(curl -L -s https://install.direct/go.sh) > /dev/null 2>&1
+    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         log "Install v2ray successful!!!"
         log "Modifing config file..."
