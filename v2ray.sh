@@ -244,7 +244,7 @@ client() {
         /bin/cat conf/client.json | /bin/sed \
             -e "s/\"address\": \"baidu.com\"/\"address\": \"$3\"/g" \
             -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
-            -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
+            -e "s/\"path\": \"\S\+/\"path\": \"\/$2\",/g" \
             | tee >/etc/v2ray/config.json \
             && log "success" \
             && systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
