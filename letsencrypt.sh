@@ -11,6 +11,7 @@ declare he_net_ddns_key=$2
 declare release="ubuntu"
 declare SLEEP_TIME=3
 declare SSL_PATH="/etc/nginx/ssl/"
+declare acme_dir="/root"
 log() {
     echo -e "[$(/bin/date)] $1"
 }
@@ -91,18 +92,27 @@ acme_sh() {
         && log "success"
     cd ~/
     log "Installing acme..." \
+        && cd /root/ \
         && curl https://get.acme.sh | sh >/dev/null 2>&1 \
         && log "Install acme successful!!!"
+    if [ -e "/root/.acme.sh" ]; then
+        acme_dir="/root"
+    elif [ -e "/.acme.sh" ]; then
+        acme_dir=""
+    else
+        log "Acme not found, exit..."
+        exit 1
+    fi
     log "Generating ssl file..." \
-        && ~/.acme.sh/acme.sh --issue -d $siteName --nginx \
+        && $acme_dir/.acme.sh/acme.sh --issue -d $siteName --nginx \
         && log "Generate ssl file successful!!!"
     log "Installing ssl file to default dir..." \
-        && ~/.acme.sh/acme.sh --installcert -d $siteName \
+        && $acme_dir/.acme.sh/acme.sh --installcert -d $siteName \
             --key-file $SSL_PATH$siteName/key.key \
             --fullchain-file $SSL_PATH$siteName/fullchain.cer \
             --reloadcmd "service nginx force-reload"
     log "Enable auto-upgrade..."
-    ~/.acme.sh/acme.sh --upgrade --auto-upgrade \
+    $acme_dir/.acme.sh/acme.sh --upgrade --auto-upgrade \
         && log "Success!!!"
 }
 
