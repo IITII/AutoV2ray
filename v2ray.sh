@@ -284,7 +284,7 @@ fi
 if [ -z $uuid ]; then
     uuid=$(/usr/bin/uuidgen -t)
 fi
-if [ -z $uuid ]; then
+if [ -z $sslPath ]; then
     sslPath="/etc/nginx/ssl/$siteName"
 fi
 
