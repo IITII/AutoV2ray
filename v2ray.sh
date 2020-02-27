@@ -227,6 +227,7 @@ server() {
         log "Reload v2ray..."
         #Then reload v2ray
         systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
+        log "Enable auto start..." && systemctl enable v2ray && log "Success"
         firewall_rule
     else
         log "Install v2ray failed!!!"
