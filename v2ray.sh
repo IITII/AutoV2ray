@@ -22,6 +22,13 @@ declare repoAddr="https://github.com/IITII/AutoV2ray"
 declare siteRepoName="FileList"
 declare siteRepoAddr="https://github.com/IITII/FileList"
 
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+SKYBLUE='\033[0;36m'
+PLAIN='\033[0m'
+
 log() {
     echo -e "[$(/bin/date)] $1"
 }
@@ -99,89 +106,100 @@ git_clone() {
 }
 pre_check_var() {
     case "$installMode" in
-    server)
-        log "Check server's necessary variable..."
-        if [ -z $uuid ]; then
-            log "uuid is Empty, Generating..."
-            uuid=$(/usr/bin/uuidgen -t)
-            log "Now uuid is $uuid"
-        fi
-        if [ -z $wsPath ]; then
-            log "wsPath is Empty, Generating..."
-            wsPath=$(/bin/date +"%S" | base64)
-            log "Now wsPath is $wsPath"
-        fi
-        # check sitename
-        if [ -z $siteName ]; then
-            log "SiteName can not be empty!!!"
-            exit 1
-        fi
-        if [ -z $sslPath ]; then
-            log "sslPath is Empty, Generating..."
-            sslPath="/etc/nginx/ssl/$siteName"
-            log "Now sslPath is $siteName"
-        fi
-        # check he_net_ddns_key
-        if [ -z $he_net_ddns_key ]; then
-            log "$ddns_key can not be empty!!!"
-            exit 1
-        fi
-        log "Now: server variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName, webROOT: $webROOT , sslPath: $sslPath , he_net_ddns_key: $he_net_ddns_key"
-        ;;
-    client)
-        log "Check client's necessary variable..."
-        if [ -z $uuid ]; then
-            log "wsPath is Empty, Generating..."
-            uuid=$(/usr/bin/uuidgen -t)
-            log "Now wsPath is $uuid"
-        fi
-        if [ -z $wsPath ]; then
-            log "wsPath is Empty, Generating..."
-            wsPath=$(/bin/date +"%S" | base64)
-            log "Now wsPath is $wsPath"
-        fi
-        # check sitename
-        if [ -z $siteName ]; then
-            log "SiteName can not be empty!!!"
-            exit 1
-        fi
-        log "Now: client variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName"
-        ;;
+        server)
+            log "Check server's necessary variable..."
+            if [ -z $uuid ]; then
+                log "uuid is Empty, Generating..."
+                uuid=$(/usr/bin/uuidgen -t)
+                log "Now uuid is $uuid"
+            fi
+            if [ -z $wsPath ]; then
+                log "wsPath is Empty, Generating..."
+                wsPath=$(/bin/date +"%S" | base64)
+                log "Now wsPath is $wsPath"
+            fi
+            # check sitename
+            if [ -z $siteName ]; then
+                log "SiteName can not be empty!!!"
+                exit 1
+            fi
+            if [ -z $sslPath ]; then
+                log "sslPath is Empty, Generating..."
+                sslPath="/etc/nginx/ssl/$siteName"
+                log "Now sslPath is $siteName"
+            fi
+            # check he_net_ddns_key
+            if [ -z $he_net_ddns_key ]; then
+                log "ddns_key can not be empty!!!"
+                exit 1
+            fi
+            log "Now: server variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName, webROOT: $webROOT , sslPath: $sslPath , he_net_ddns_key: $he_net_ddns_key"
+            ;;
+        client)
+            log "Check client's necessary variable..."
+            if [ -z $uuid ]; then
+                log "wsPath is Empty, Generating..."
+                uuid=$(/usr/bin/uuidgen -t)
+                log "Now wsPath is $uuid"
+            fi
+            if [ -z $wsPath ]; then
+                log "wsPath is Empty, Generating..."
+                wsPath=$(/bin/date +"%S" | base64)
+                log "Now wsPath is $wsPath"
+            fi
+            # check sitename
+            if [ -z $siteName ]; then
+                log "SiteName can not be empty!!!"
+                exit 1
+            fi
+            log "Now: client variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName"
+            ;;
     esac
 }
 firewall_rule() {
     case "$installMode" in
-    server)
-        log "Adding server iptable rules..."
-        if [ "$release" = "centos" ]; then
-            systemctl stop firewalld.service
-            systemctl disable firewalld.service
-        else
-            ufw allow 22 >/dev/null 2>&1
-            ufw allow 80 >/dev/null 2>&1
-            ufw allow 443 >/dev/null 2>&1
-            ufw reload
-        fi
-        iptables -A INPUT -p tcp -m multiport --dports 22,80,443 -j ACCEPT
-        iptables -A OUTPUT -p tcp -m multiport --sports 22,80,443 -j ACCEPT
-        ;;
-    client)
-        log "Adding client iptable rules..."
-        if [ "$release" = "centos" ]; then
-            systemctl stop firewalld.service
-            systemctl disable firewalld.service
-        else
-            ufw allow 22 >/dev/null 2>&1
-            ufw allow 7878 >/dev/null 2>&1
-            ufw allow 10809 >/dev/null 2>&1
-            ufw reload
-        fi
-        iptables -A INPUT -p tcp -m multiport --dports 22,7878,10809 -j ACCEPT
-        iptables -A OUTPUT -p tcp -m multiport --sports 22,7878,10809 -j ACCEPT
-        iptables -A OUTPUT -p udp -m multiport --sports 7878 -j ACCEPT
-        ;;
+        server)
+            log "Adding server iptable rules..."
+            if [ "$release" = "centos" ]; then
+                systemctl stop firewalld.service
+                systemctl disable firewalld.service
+            else
+                ufw allow 22 >/dev/null 2>&1
+                ufw allow 80 >/dev/null 2>&1
+                ufw allow 443 >/dev/null 2>&1
+                ufw reload
+            fi
+            iptables -A INPUT -p tcp -m multiport --dports 22,80,443 -j ACCEPT
+            iptables -A OUTPUT -p tcp -m multiport --sports 22,80,443 -j ACCEPT
+            ;;
+        client)
+            log "Adding client iptable rules..."
+            if [ "$release" = "centos" ]; then
+                systemctl stop firewalld.service
+                systemctl disable firewalld.service
+            else
+                ufw allow 22 >/dev/null 2>&1
+                ufw allow 7878 >/dev/null 2>&1
+                ufw allow 10809 >/dev/null 2>&1
+                ufw reload
+            fi
+            iptables -A INPUT -p tcp -m multiport --dports 22,7878,10809 -j ACCEPT
+            iptables -A OUTPUT -p tcp -m multiport --sports 22,7878,10809 -j ACCEPT
+            iptables -A OUTPUT -p udp -m multiport --sports 7878 -j ACCEPT
+            ;;
     esac
     log "Finished!!!"
+}
+vmess_gen() {
+    temp=$(/bin/cat conf/share.json | /bin/sed \
+    -e "s/baidu.com\",$/$siteName\",/g" \
+    -e "s/\"id\": \"\S\+/\"id\": \"$uuid\",/g" \
+    -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g" \
+    | base64 -w 0)
+    log "v2ray link: ${SKYBLUE}vmess://$temp${PLAIN}"
+    log "Generating v2ray subscription link..."
+    echo "vmess://$temp" |base64 -w 0 > $webROOT/sub \
+    && log "${GREEN}Generated!${PLAIN} Here is: ${SKYBLUE}https://$siteName/sub${PLAIN}"
 }
 server() {
     #echo $@
@@ -281,52 +299,52 @@ eval set -- "${ARGS}"
 while [ -n $1 ]; do
     #log "\$@: $@"
     case "$1" in
-    -t)
-        case $2 in
-        1)
-            installMode="server"
+        -t)
+            case $2 in
+                1)
+                    installMode="server"
+                    ;;
+                2)
+                    installMode="client"
+                    ;;
+                *)
+                    log "unkonw argument"
+                    exit 1
+                    ;;
+            esac
+            shift
             ;;
-        2)
-            installMode="client"
+        -w)
+            if [ -n $2 ]; then
+                siteName="$2"
+            else
+                log "SiteName can not be empty!!!"
+            fi
+            shift
+            ;;
+        -h | --help)
+            help
+            ;;
+        -p | --path)
+            wsPath="$2"
+            shift
+            ;;
+        -u)
+            uuid="$2"
+            shift
+            ;;
+        --ddns)
+            he_net_ddns_key="$2"
+            shift
+            ;;
+        --)
+            shift
+            break
             ;;
         *)
             log "unkonw argument"
             exit 1
             ;;
-        esac
-        shift
-        ;;
-    -w)
-        if [ -n $2 ]; then
-            siteName="$2"
-        else
-            log "SiteName can not be empty!!!"
-        fi
-        shift
-        ;;
-    -h | --help)
-        help
-        ;;
-    -p | --path)
-        wsPath="$2"
-        shift
-        ;;
-    -u)
-        uuid="$2"
-        shift
-        ;;
-    --ddns)
-        he_net_ddns_key="$2"
-        shift
-        ;;
-    --)
-        shift
-        break
-        ;;
-    *)
-        log "unkonw argument"
-        exit 1
-        ;;
     esac
     shift
 done
@@ -339,17 +357,18 @@ pre_check_var
 git_clone $repoAddr $repoName
 cd ~/$repoName
 case "$installMode" in
-server)
-    log "Installing server..."
-    server $uuid $wsPath $siteName $webROOT $sslPath $he_net_ddns_key
-    ;;
-client)
-    log "Installing client..."
-    client $uuid $wsPath $siteName
-    ;;
+    server)
+        log "Installing server..."
+        server $uuid $wsPath $siteName $webROOT $sslPath $he_net_ddns_key
+        ;;
+    client)
+        log "Installing client..."
+        client $uuid $wsPath $siteName
+        ;;
 esac
 if [ $? -eq 0 ]; then
     log "Install successful!!!"
+    vmess_gen
     exit 0
 else
     log "Install failed..."
