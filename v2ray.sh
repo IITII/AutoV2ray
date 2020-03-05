@@ -291,8 +291,6 @@ while [[ -n $1 ]]; do
     shift
 done
 
-pre_check_var
-
 if ! ( (command -v v2ray) && (command -v v2ctl)) >/dev/null 2>&1; then
     log "Install main program..."
     rm -rf /usr/bin/v2ray
@@ -301,6 +299,8 @@ if ! ( (command -v v2ray) && (command -v v2ctl)) >/dev/null 2>&1; then
 else
     log_prompt "Already installed"
 fi
+
+pre_check_var
 main ${uuid} ${wsPath} ${siteName} ${sslPublic} ${sslPrivate}
 pre_command_run_status
 vmess_gen
