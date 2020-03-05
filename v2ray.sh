@@ -136,10 +136,10 @@ pre_check_var() {
         wsPath=$(/bin/date +"%S" | base64)
         log "Now wsPath is $wsPath"
     fi
-    sslPath=${nginx_default_ssl}/${siteName}
     if [[ -z ${he_net_ddns_key} ]]; then
         flag=1
     else
+        sslPath=${nginx_default_ssl}/${siteName}
         check_path ${sslPath}
         bash ${CURRENT_DIR}/letsencrypt.sh ${siteName} ${he_net_ddns_key} ${sslPath}
         ssl_pub_key ${sslPath} ${CURRENT_DIR}
@@ -147,6 +147,7 @@ pre_check_var() {
     if [[ -z ${sslPath} ]] && [[ ${flag} -eq 1 ]]; then
         log_info "It looks that you have nothing..."
         log "Generate self signed cert..."
+        sslPath=${nginx_default_ssl}/${siteName}
         check_path ${sslPath}
         v2ctl cert -ca -expire 8760h -file ${sslPath}/v2 \
             -name "${siteName}" -org "${siteName}" -domain "${siteName}" >/dev/null 2>&1
