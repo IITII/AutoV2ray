@@ -189,6 +189,8 @@ vmess_gen() {
         log_success "v2ray link save to /root/v2ray_link"
 }
 main() {
+    log "Ensure service is started...."
+    systemctl restart nginx v2ray
     log "Modifying config file..."
     log "Modifying nginx config file"
     /bin/cat ${CURRENT_DIR}/conf/tls.nginx | /bin/sed \
