@@ -77,11 +77,11 @@ check_command() {
     if ! command -v $2 >/dev/null 2>&1; then
         log "Installing $2 from $1 repo"
         if [[ "$1" = "centos" ]]; then
-            sudo yum update >/dev/null 2>&1
-            sudo yum -y install $3 >/dev/null 2>&1
+            yum update >/dev/null 2>&1
+            yum -y install $3 >/dev/null 2>&1
         else
-            sudo apt-get update >/dev/null 2>&1
-            sudo apt-get install $3 -y >/dev/null 2>&1
+            apt-get update >/dev/null 2>&1
+            apt-get install $3 -y >/dev/null 2>&1
         fi
         pre_command_run_status
     fi

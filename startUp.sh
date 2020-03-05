@@ -50,11 +50,11 @@ check_command() {
     if ! command -v $1 >/dev/null 2>&1; then
         log "Installing $1 from $release repo"
         if [[ "$2" = "centos" ]]; then
-            sudo yum update >/dev/null 2>&1
-            sudo yum -y install $3 >/dev/null 2>&1
+            yum update >/dev/null 2>&1
+            yum -y install $3 >/dev/null 2>&1
         else
-            sudo apt-get update >/dev/null 2>&1
-            sudo apt-get install $3 -y >/dev/null 2>&1
+            apt-get update >/dev/null 2>&1
+            apt-get install $3 -y >/dev/null 2>&1
         fi
         if [[ $? -eq 0 ]]; then
             log "Install $3 successful!!!"
