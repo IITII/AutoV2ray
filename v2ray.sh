@@ -223,6 +223,7 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 cd ${CURRENT_DIR}
+check_release
 check_command ${release} getopt "util-linux"
 check_command ${release} tee "tee"
 check_command ${release} base64 "coreutils"
