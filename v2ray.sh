@@ -233,7 +233,6 @@ check_command ${release} base64 "coreutils"
 check_command ${release} nginx "nginx"
 check_command ${release} curl "curl"
 check_command ${release} tree "tree"
-check_command ${release} systemctl "systemd"
 
 ARGS=$(getopt -a -o hw:p:u: -l help,path:,ddns:,uuid:,sslPath: -- "$@")
 #set -- "${ARGS}"
