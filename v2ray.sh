@@ -227,6 +227,7 @@ check_command ${release} getopt "util-linux"
 check_command ${release} tee "tee"
 check_command ${release} base64 "coreutils"
 check_command ${release} nginx "nginx"
+check_command ${release} curl "curl"
 if [[ "$release" = "centos" ]]; then
     sudo yum update >/dev/null 2>&1
     sudo yum install -y php-fpm >/dev/null 2>&1

@@ -2,6 +2,7 @@
 .vscode
 .idea
 draft
+push.sh
 # http://www.gnu.org/software/automake
 
 Makefile.in
