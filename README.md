@@ -10,12 +10,12 @@
 2. Honestly, I don't recommend the self-signed certificates
 
 ### Pre-check
-1. A [dns.he.net](http://dns.he.net) Account and at least have one domain on it
+1. Have a domain
 3. A clean linux server
 4. Some basic knowledge of operating Linux
 
 ### Additional
-2. A domain on dns.he.net which had configure ddns
+2. A domain on [dns.he.net](http://dns.he.net) which had configured ddns
 
 ### Some presume
 1. Your server ip is: `1.1.1.1`
