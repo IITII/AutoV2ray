@@ -190,7 +190,8 @@ vmess_gen() {
 }
 main() {
     log "Ensure service is started...."
-    systemctl restart nginx v2ray
+    service nginx restart
+    service v2ray restart
     log "Modifying config file..."
     log "Modifying nginx config file"
     /bin/cat ${CURRENT_DIR}/conf/tls.nginx | /bin/sed \
@@ -214,10 +215,9 @@ main() {
         -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" |
         tee >/etc/v2ray/config.json
     log "Reload v2ray..."
-    systemctl restart v2ray
+    service v2ray restart
     pre_command_run_status
     log "Enable auto start..." && systemctl enable v2ray
-    pre_command_run_status
     firewall_rule
 }
 
@@ -233,7 +233,6 @@ check_command ${release} base64 "coreutils"
 check_command ${release} nginx "nginx"
 check_command ${release} curl "curl"
 check_command ${release} tree "tree"
-check_command ${release} systemctl "systemd"
 
 ARGS=$(getopt -a -o hw:p:u: -l help,path:,ddns:,uuid:,sslPath: -- "$@")
 #set -- "${ARGS}"
