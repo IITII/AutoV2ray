@@ -153,13 +153,14 @@ pre_check_var() {
             -name "${siteName}" -org "${siteName}" -domain "${siteName}" >/dev/null 2>&1
         ssl_pub_key ${sslPath} ${CURRENT_DIR}
     fi
-    if [[ ${flag} -eq 1 ]]; then
+    if [[ ${flag} -eq 0 ]]; then
         log_info \
             "Check again: siteName: $siteName , uuid: $uuid , wsPath: $wsPath , he_net_ddns_key: $he_net_ddns_key"
         tree ${sslPath}
     else
         log_info \
             "Check again: siteName: $siteName , uuid: $uuid , wsPath: $wsPath , sslPath: $sslPath , sslPublic: $sslPublic , sslPrivate: $sslPrivate"
+        tree ${sslPath}
     fi
 }
 firewall_rule() {
@@ -233,6 +234,7 @@ check_command ${release} base64 "coreutils"
 check_command ${release} nginx "nginx"
 check_command ${release} curl "curl"
 check_command ${release} tree "tree"
+check_command ${release} systemctl "systemd"
 
 ARGS=$(getopt -a -o hw:p:u: -l help,path:,ddns:,uuid:,sslPath: -- "$@")
 #set -- "${ARGS}"
