@@ -216,9 +216,8 @@ main() {
         -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" |
         tee >/etc/v2ray/config.json
     log "Reload v2ray..."
-    service v2ray restart
-    pre_command_run_status
-    log "Enable auto start..." && systemctl enable v2ray
+    service v2ray restart && log_success "Success"
+    log "Enable auto start..." && systemctl enable v2ray && log_success "Success"
     firewall_rule
 }
 
@@ -303,5 +302,4 @@ fi
 
 pre_check_var
 main ${uuid} ${wsPath} ${siteName} ${sslPublic} ${sslPrivate}
-pre_command_run_status
 vmess_gen
