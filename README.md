@@ -1,7 +1,6 @@
 # AutoV2ray
 > let v2ray configure automatic ( TLS+NGINX+WEB )  
 > Just put your site file on `www` dir if you want to use your own site as the web page    
-> PHP support is enabled by default  
 
 **[简体中文](https://iitii.github.io/2020/02/08/1/)**
 

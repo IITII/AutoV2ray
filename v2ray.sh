@@ -196,7 +196,7 @@ main() {
         -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/$5;/g" \
         -e "s/location \/china \S\+/location \/$2 {/g" \
         -e "s/root \S\+/root \/var\/www\/html;/g" \
-        -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1);/g" \
+        #-e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1);/g" \
         >/etc/nginx/sites-available/default
     cp -R ${CURRENT_DIR}/www/* /var/www/html/
     log "Testing nginx config..."
@@ -229,13 +229,7 @@ check_command ${release} tee "tee"
 check_command ${release} base64 "coreutils"
 check_command ${release} nginx "nginx"
 check_command ${release} curl "curl"
-if [[ "$release" = "centos" ]]; then
-    yum update >/dev/null 2>&1
-    yum install -y php-fpm >/dev/null 2>&1
-else
-    apt-get update >/dev/null 2>&1
-    apt-get install -y php-fpm >/dev/null 2>&1
-fi
+check_command ${release} tree "tree"
 
 ARGS=$(getopt -a -o hw:p:u: -l help,path:,ddns:,uuid:,sslPath: -- "$@")
 #set -- "${ARGS}"
