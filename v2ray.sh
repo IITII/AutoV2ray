@@ -2,26 +2,27 @@
 #=================================================
 #	Recommend OS: Debian/Ubuntu
 #	Description: V2ray auto-deploy
-#	Version: 1.0.0
+#	Version: 2.0.0
 #	Author: IITII
 #	Blog: https://IITII.github.io
 #=================================================
-declare siteName=""
-declare wsPath=""
-declare sslPath=""
-declare uuid=""
-declare he_net_ddns_key=""
-declare installMode="server"
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/v2ray/
+#=================================================
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+siteName=""
+wsPath=""
+# ssl public: *.cer *.crt *.pem
+# ssl key: *.key
+sslPath=""
+sslPublic=""
+sslPrivate=""
+uuid=""
+he_net_ddns_key=""
 
-declare release="ubuntu"
-declare GETOPT_PACKAGE_NAME="util-linux"
-declare BASE64_PACKAGE_NAME="coreutils"
-declare webROOT="/var/www/FileList"
-declare repoName="AutoV2ray"
-declare repoAddr="https://github.com/IITII/AutoV2ray"
-declare siteRepoName="FileList"
-declare siteRepoAddr="https://github.com/IITII/FileList"
-
+# Don't modify
+release="ubuntu"
+flag=0
+nginx_default_ssl="/etc/nginx/ssl"
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -29,34 +30,37 @@ YELLOW='\033[0;33m'
 SKYBLUE='\033[0;36m'
 PLAIN='\033[0m'
 
-log() {
-    echo -e "[$(/bin/date)] $1"
-}
-check_command() {
-    if ! command -v $1 >/dev/null 2>&1; then
-        log "Installing $1 from $release repo"
-        if [ "$2" = "centos" ]; then
-            sudo yum update >/dev/null 2>&1
-            sudo yum -y install $3 >/dev/null 2>&1
-        else
-            sudo apt-get update >/dev/null 2>&1
-            sudo apt-get install $3 -y >/dev/null 2>&1
-        fi
-        if [ $? -eq 0 ]; then
-            log "Install $3 successful!!!"
-        else
-            log "Install $3 failed..."
-        fi
-    fi
-}
 check_root() {
-    [ $(id -u) != "0" ] && {
+    [[ $(id -u) != "0" ]] && {
         log "Error: You must be root to run this script"
         exit 1
     }
 }
+pre_command_run_status() {
+    if [[ $? -eq 0 ]]; then
+        log_success "Success"
+    else
+        log_err "Failed"
+        exit 1
+    fi
+}
+log() {
+    echo -e "[$(/bin/date)] $1"
+}
+log_success() {
+    echo -e "${GREEN}[$(/bin/date)] $1${PLAIN}"
+}
+log_info() {
+    echo -e "${YELLOW}[$(/bin/date)] $1${PLAIN}"
+}
+log_prompt() {
+    echo -e "${SKYBLUE}[$(/bin/date)] $1${PLAIN}"
+}
+log_err() {
+    echo -e "${RED}[$(/bin/date)] $1${PLAIN}"
+}
 check_release() {
-    if [ -f /etc/redhat-release ]; then
+    if [[ -f /etc/redhat-release ]]; then
         release="centos"
     elif cat /etc/issue | grep -Eqi "debian"; then
         release="debian"
@@ -72,305 +76,231 @@ check_release() {
         release="centos"
     fi
 }
-help() {
+show_help() {
     echo "Usage:
   $0 -h, --help            Show this page
-  $0 -t:                   Install, default \"$installMode\"
-    $0 -t 1                Install server
-    $0 -t 2                Install client
   $0 -w                    siteName
-  $0 -p, --path            v2ray web socket path
-                              default \"/bin/date +\"%S\" | /usr/bin/base64\"
-  $0 -u                    v2ray uuid
+  $0 -p, --path            v2ray web socket path, default \"/bin/date +\"%S\" | /usr/bin/base64\"
+  $0 -u, --uuid            v2ray uuid
   $0 --ddns                dns.he.net ddns's key
+  $0 --sslPath             ssl cert path
 "
+}
+check_command() {
+    if ! command -v $2 >/dev/null 2>&1; then
+        log "Installing $2 from $1 repo"
+        if [[ "$1" = "centos" ]]; then
+            sudo yum update >/dev/null 2>&1
+            sudo yum -y install $3 >/dev/null 2>&1
+        else
+            sudo apt-get update >/dev/null 2>&1
+            sudo apt-get install $3 -y >/dev/null 2>&1
+        fi
+        pre_command_run_status
+    fi
 }
 check_path() {
     log "Checking Path $1"
-    if ! [ -d $1 ]; then
-        log "Create Unexist Path $1"
+    if ! [[ -d $1 ]]; then
+        log "Create Un-exist Path $1"
         mkdir -p $1
-        if [ $? -eq 0 ]; then
-            log "Create path $1 successful!!!"
-        else
-            log "Create path $1 failed..."
-        fi
+        pre_command_run_status
     else
         log "Existed !"
     fi
 }
-git_clone() {
-    cd ~/ \
-        && eval /usr/bin/git clone $1 $2 \
-        && cd $2
+ssl_pub_key() {
+    sslPublic=$(ls $1 | grep -v "key" | head -n 1)
+    sslPrivate=$(ls $1 | grep "key" | head -n 1)
+    cd $1
+    if [[ -z ${sslPublic} ]] && [[ -z ${sslPrivate} ]]; then
+        log_err "Right cert files?"
+        log_info "Require: PublicKey: *.cer| *.crt| *.pem; PrivateKey: *.key"
+        exit 1
+    fi
+    cd $2
 }
 pre_check_var() {
-    case "$installMode" in
-        server)
-            log "Check server's necessary variable..."
-            if [ -z $uuid ]; then
-                log "uuid is Empty, Generating..."
-                uuid=$(/usr/bin/uuidgen -t)
-                log "Now uuid is $uuid"
-            fi
-            if [ -z $wsPath ]; then
-                log "wsPath is Empty, Generating..."
-                wsPath=$(/bin/date +"%S" | base64)
-                log "Now wsPath is $wsPath"
-            fi
-            # check sitename
-            if [ -z $siteName ]; then
-                log "SiteName can not be empty!!!"
-                exit 1
-            fi
-            if [ -z $sslPath ]; then
-                log "sslPath is Empty, Generating..."
-                sslPath="/etc/nginx/ssl/$siteName"
-                log "Now sslPath is $siteName"
-            fi
-            # check he_net_ddns_key
-            if [ -z $he_net_ddns_key ]; then
-                log "ddns_key can not be empty!!!"
-                exit 1
-            fi
-            log "Now: server variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName, webROOT: $webROOT , sslPath: $sslPath , he_net_ddns_key: $he_net_ddns_key"
-            ;;
-        client)
-            log "Check client's necessary variable..."
-            if [ -z $uuid ]; then
-                log "wsPath is Empty, Generating..."
-                uuid=$(/usr/bin/uuidgen -t)
-                log "Now wsPath is $uuid"
-            fi
-            if [ -z $wsPath ]; then
-                log "wsPath is Empty, Generating..."
-                wsPath=$(/bin/date +"%S" | base64)
-                log "Now wsPath is $wsPath"
-            fi
-            # check sitename
-            if [ -z $siteName ]; then
-                log "SiteName can not be empty!!!"
-                exit 1
-            fi
-            log "Now: client variable value is uuid: $uuid , wsPath: $wsPath , siteName: $siteName"
-            ;;
-    esac
+    log "Check necessary variable..."
+    if [[ -z ${siteName} ]]; then
+        log "SiteName can not be empty!!!"
+        exit 1
+    fi
+    if [[ -z ${uuid} ]]; then
+        log "uuid is Empty, Generating..."
+        uuid=$(v2ctl uuid)
+        log "Now uuid is $uuid"
+    fi
+    if [[ -z ${wsPath} ]]; then
+        log "wsPath is Empty, Generating..."
+        wsPath=$(/bin/date +"%S" | base64)
+        log "Now wsPath is $wsPath"
+    fi
+    sslPath=${nginx_default_ssl}/${siteName}
+    if [[ -z ${he_net_ddns_key} ]]; then
+        flag=1
+    else
+        check_path ${sslPath}
+        bash ${CURRENT_DIR}/letsencrypt.sh ${siteName} ${he_net_ddns_key} ${sslPath}
+        ssl_pub_key ${sslPath} ${CURRENT_DIR}
+    fi
+    if [[ -z ${sslPath} ]] && [[ ${flag} -eq 1 ]]; then
+        log_info "It looks that you have nothing..."
+        log "Generate self signed cert..."
+        check_path ${sslPath}
+        v2ctl cert -ca -expire 8760h -file ${sslPath}/v2 \
+            -name "${siteName}" -org "${siteName}" -domain "${siteName}" >/dev/null 2>&1
+        ssl_pub_key ${sslPath} ${CURRENT_DIR}
+    fi
+    if [[ ${flag} -eq 1 ]]; then
+        log_info \
+            "Check again: siteName: $siteName , uuid: $uuid , wsPath: $wsPath , he_net_ddns_key: $he_net_ddns_key"
+        tree ${sslPath}
+    else
+        log_info \
+            "Check again: siteName: $siteName , uuid: $uuid , wsPath: $wsPath , sslPath: $sslPath , sslPublic: $sslPublic , sslPrivate: $sslPrivate"
+    fi
 }
 firewall_rule() {
-    case "$installMode" in
-        server)
-            log "Adding server iptable rules..."
-            if [ "$release" = "centos" ]; then
-                systemctl stop firewalld.service
-                systemctl disable firewalld.service
-            else
-                ufw allow 22 >/dev/null 2>&1
-                ufw allow 80 >/dev/null 2>&1
-                ufw allow 443 >/dev/null 2>&1
-                ufw reload
-            fi
-            iptables -A INPUT -p tcp -m multiport --dports 22,80,443 -j ACCEPT
-            iptables -A OUTPUT -p tcp -m multiport --sports 22,80,443 -j ACCEPT
-            ;;
-        client)
-            log "Adding client iptable rules..."
-            if [ "$release" = "centos" ]; then
-                systemctl stop firewalld.service
-                systemctl disable firewalld.service
-            else
-                ufw allow 22 >/dev/null 2>&1
-                ufw allow 7878 >/dev/null 2>&1
-                ufw allow 10809 >/dev/null 2>&1
-                ufw reload
-            fi
-            iptables -A INPUT -p tcp -m multiport --dports 22,7878,10809 -j ACCEPT
-            iptables -A OUTPUT -p tcp -m multiport --sports 22,7878,10809 -j ACCEPT
-            iptables -A OUTPUT -p udp -m multiport --sports 7878 -j ACCEPT
-            ;;
-    esac
+    log "Adding iptable rules..."
+    if [[ "$release" = "centos" ]]; then
+        systemctl stop firewalld.service >/dev/null 2>&1
+        systemctl disable firewalld.service >/dev/null 2>&1
+    else
+        ufw allow 22 >/dev/null 2>&1
+        ufw allow 80 >/dev/null 2>&1
+        ufw allow 443 >/dev/null 2>&1
+        ufw reload >/dev/null 2>&1
+    fi
+    iptables -A INPUT -p tcp -m multiport --dports 22,80,443 -j ACCEPT
+    iptables -A OUTPUT -p tcp -m multiport --sports 22,80,443 -j ACCEPT
     log "Finished!!!"
 }
 vmess_gen() {
-    temp=$(/bin/cat conf/share.json | /bin/sed \
-    -e "s/baidu.com\",$/$siteName\",/g" \
-    -e "s/\"id\": \"\S\+/\"id\": \"$uuid\",/g" \
-    -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g" \
-    | base64 -w 0)
-    log "v2ray link: ${SKYBLUE}vmess://$temp${PLAIN}"
-    log "Generating v2ray subscription link..."
-    echo "vmess://$temp" |base64 -w 0 > $webROOT/sub \
-    && log "${GREEN}Generated!${PLAIN} Here is: ${SKYBLUE}https://$siteName/sub${PLAIN}"
+    temp=$(/bin/cat ${CURRENT_DIR}/conf/share.json | /bin/sed \
+        -e "s/baidu.com\",$/$siteName\",/g" \
+        -e "s/\"id\": \"\S\+/\"id\": \"$uuid\",/g" \
+        -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g" |
+        base64 -w 0)
+    temp=$(echo vmess://${temp})
+    log_prompt "v2ray link: ${SKYBLUE}${temp}${PLAIN}"
+    echo "${temp}" >/root/v2ray_link &&
+        log_success "v2ray link save to /root/v2ray_link"
 }
-server() {
-    #echo $@
-    log "Install main program..."
-    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        log "Install v2ray successful!!!"
-        log "Generating $3 ssl file..."
-        bash ./letsencrypt.sh $3 $6
-        log "Modifing config file..."
-        log "Modifing nginx config file"
-        # function foo() {
-        #   /bin/cat conf/tls.nginx | /bin/sed \
-        #   -e "s/server_name \S\+/server_name $3;/g" \
-        #   -e "s/ssl_certificate \S\+/ssl_certificate \/etc\/nginx\/ssl\/$3\/fullchain.cer;/g" \
-        #   -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/key.key;/g" \
-        #   -e "s/location \/china \S\+/location \/$2;/g" \
-        #   -e "s/root \S\+/root $4;/g"
-        # }
-        /bin/cat conf/tls.nginx | /bin/sed \
-            -e "s/server_name \S\+/server_name $3;/g" \
-            -e "s/ssl_certificate \S\+/ssl_certificate \/etc\/nginx\/ssl\/$3\/fullchain.cer;/g" \
-            -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/key.key;/g" \
-            -e "s/location \/china \S\+/location \/$2 {/g" \
-            -e "s/root \S\+/root \/var\/www\/FileList;/g" \
-            -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1);/g" \
-            >/etc/nginx/sites-available/default \
-            && log "success"
+main() {
+    log "Modifying config file..."
+    log "Modifying nginx config file"
+    /bin/cat ${CURRENT_DIR}/conf/tls.nginx | /bin/sed \
+        -e "s/server_name \S\+/server_name $3;/g" \
+        -e "s/ssl_certificate \S\+/ssl_certificate \/etc\/nginx\/ssl\/$3\/$4;/g" \
+        -e "s/ssl_certificate_key \S\+/ssl_certificate_key \/etc\/nginx\/ssl\/$3\/$5;/g" \
+        -e "s/location \/china \S\+/location \/$2 {/g" \
+        -e "s/root \S\+/root \/var\/www\/html;/g" \
+        -e "s/fastcgi_pass \S\+/fastcgi_pass unix:\/run\/php\/$(ls /run/php/ | grep sock | head -n 1);/g" \
+        >/etc/nginx/sites-available/default
+    cp -R ${CURRENT_DIR}/www/* /var/www/html/
+    log "Testing nginx config..."
+    nginx -t >/dev/null 2>&1
+    pre_command_run_status
+    log "Reload nginx..." && nginx -s reload >/dev/null 2>&1
+    pre_command_run_status
 
-        log "Modifing v2ray config file"
-        /bin/cat conf/server.json | /bin/sed \
-            -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
-            -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" \
-            | tee >/etc/v2ray/config.json \
-            && log "success"
-        cd ~/ \
-            && eval git clone $siteRepoAddr $siteRepoName >/dev/null 2>&1
-        cp -R $siteRepoName $webROOT \
-            && log "Testing nginx config..."
-        nginx -t >/dev/null 2>&1 && log "success"
-        log "Reload nginx..."
-        nginx -s reload >/dev/null 2>&1 && log "success"
-        log "Reload v2ray..."
-        #Then reload v2ray
-        systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
-        log "Enable auto start..." && systemctl enable v2ray && log "Success"
-        firewall_rule
-    else
-        log "Install v2ray failed!!!"
-        exit 1
-    fi
+    log "Modifying v2ray config file"
+    /bin/cat ${CURRENT_DIR}/conf/server.json | /bin/sed \
+        -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
+        -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" |
+        tee >/etc/v2ray/config.json
+    log "Reload v2ray..."
+    systemctl restart v2ray
+    pre_command_run_status
+    log "Enable auto start..." && systemctl enable v2ray
+    pre_command_run_status
+    firewall_rule
 }
-client() {
-    #echo $@
-    log "Install main program..."
-    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        log "Install v2ray successful!!!"
-        log "Modifing config file..."
-        log "Modifing v2ray config file"
-        /bin/cat conf/client.json | /bin/sed \
-            -e "s/\"address\": \"baidu.com\"/\"address\": \"$3\"/g" \
-            -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
-            -e "s/\"path\": \"\S\+/\"path\": \"\/$2\",/g" \
-            | tee >/etc/v2ray/config.json \
-            && log "success" \
-            && systemctl restart v2ray && log "Reload successful!!!" && log "$installMode installation finished!!!"
-        firewall_rule
-    else
-        log "Install v2ray failed!!!"
-        exit 1
-    fi
-}
-# "s/\"id\": \"\S\+/\"id\": \"$SED\"/g"
 
-check_root
-if [ -z "$1" ]; then
-    help
+if [[ -z "$1" ]]; then
+    show_help
     exit 1
 fi
-check_release
-# pre-check
-check_command getopt $release $GETOPT_PACKAGE_NAME
-check_command base64 $release $BASE64_PACKAGE_NAME
-check_command tee $release $BASE64_PACKAGE_NAME
-check_command git $release git
-if [ "$release" = "centos" ]; then
-    check_command uuidgen $release util-linux
+cd ${CURRENT_DIR}
+check_command ${release} getopt "util-linux"
+check_command ${release} tee "tee"
+check_command ${release} base64 "coreutils"
+check_command ${release} nginx "nginx"
+if [[ "$release" = "centos" ]]; then
+    sudo yum update >/dev/null 2>&1
+    sudo yum install -y php-fpm >/dev/null 2>&1
 else
-    check_command uuidgen $release uuid-runtime
+    sudo apt-get update >/dev/null 2>&1
+    sudo apt-get install -y php-fpm >/dev/null 2>&1
 fi
 
-ARGS=$(getopt -a -o hvt:w:l:p:u: -l log:,help,path,ddns: -- "$@")
+ARGS=$(getopt -a -o hw:p:u: -l help,path:,ddns:,uuid:,sslPath: -- "$@")
 #set -- "${ARGS}"
 #log "\$@: $@"
 eval set -- "${ARGS}"
-while [ -n $1 ]; do
-    #log "\$@: $@"
+while [[ -n $1 ]]; do
     case "$1" in
-        -t)
-            case $2 in
-                1)
-                    installMode="server"
-                    ;;
-                2)
-                    installMode="client"
-                    ;;
-                *)
-                    log "unkonw argument"
-                    exit 1
-                    ;;
-            esac
-            shift
-            ;;
-        -w)
-            if [ -n $2 ]; then
-                siteName="$2"
-            else
-                log "SiteName can not be empty!!!"
-            fi
-            shift
-            ;;
-        -h | --help)
-            help
-            ;;
-        -p | --path)
-            wsPath="$2"
-            shift
-            ;;
-        -u)
-            uuid="$2"
-            shift
-            ;;
-        --ddns)
-            he_net_ddns_key="$2"
-            shift
-            ;;
-        --)
-            shift
-            break
-            ;;
-        *)
-            log "unkonw argument"
+    -w)
+        if [[ -n $2 ]]; then
+            siteName="$2"
+        else
+            log "SiteName can not be empty!!!"
             exit 1
-            ;;
+        fi
+        shift
+        ;;
+    -h | --help)
+        show_help
+        ;;
+    -p | --path)
+        wsPath="$2"
+        shift
+        ;;
+    -u | --uuid)
+        uuid="$2"
+        shift
+        ;;
+    --ddns)
+        he_net_ddns_key="$2"
+        shift
+        ;;
+    --sslPath)
+        if [[ -e $2 ]]; then
+            sslPath=$(cd $2 && pwd)
+            check_path "${nginx_default_ssl}/${siteName}"
+            cp ${sslPath}/* "${nginx_default_ssl}/${siteName}/"
+            sslPath=${nginx_default_ssl}/${siteName}
+            ssl_pub_key ${sslPath} ${CURRENT_DIR}
+        else
+            log_err "sslPath don't exist!!!"
+            exit 1
+        fi
+
+        shift
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        log "unknown argument"
+        exit 1
+        ;;
     esac
     shift
 done
 
-# check value
-# if value is null or "", just give them a random value
 pre_check_var
 
-# install
-git_clone $repoAddr $repoName
-cd ~/$repoName
-case "$installMode" in
-    server)
-        log "Installing server..."
-        server $uuid $wsPath $siteName $webROOT $sslPath $he_net_ddns_key
-        ;;
-    client)
-        log "Installing client..."
-        client $uuid $wsPath $siteName
-        ;;
-esac
-if [ $? -eq 0 ]; then
-    log "Install successful!!!"
-    vmess_gen
-    exit 0
+if ! ( (command -v v2ray) && (command -v v2ctl)) >/dev/null 2>&1; then
+    log "Install main program..."
+    rm -rf /usr/bin/v2ray
+    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
+    pre_command_run_status
 else
-    log "Install failed..."
-    exit 1
+    log_prompt "Already installed"
 fi
+main ${uuid} ${wsPath} ${siteName} ${sslPublic} ${sslPrivate}
+pre_command_run_status
+vmess_gen

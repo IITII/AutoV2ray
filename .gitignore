@@ -1,6 +1,7 @@
 .vs
 .vscode
 .idea
+draft
 # http://www.gnu.org/software/automake
 
 Makefile.in

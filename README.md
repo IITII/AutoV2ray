@@ -1,12 +1,21 @@
 # AutoV2ray
-> let v2ray configure automatic ( TLS+NGINX+WEB )
+> let v2ray configure automatic ( TLS+NGINX+WEB )  
+> Just put your site file on `www` dir if you want to use your own site as the web page    
+> PHP support is enabled by default  
 
 **[简体中文](https://iitii.github.io/2020/02/08/1/)**
+
+## Notice
+1. v2ray will use self-signed certificate if you don't give a [dns.he.net](https://dns.he.net) ddns_key and sslPath either
+2. Honestly, I don't recommend the self-signed certificates
+
 ### Pre-check
 1. A [dns.he.net](http://dns.he.net) Account and at least have one domain on it
-2. A domain on dns.he.net which had configure ddns
 3. A clean linux server
 4. Some basic knowledge of operating Linux
+
+### Additional
+2. A domain on dns.he.net which had configure ddns
 
 ### Some presume
 1. Your server ip is: `1.1.1.1`
@@ -18,31 +27,33 @@
 ### Quick start
 1. Login to your server: `ssh root@1.1.1.1`
 2. Clone repo: `git clone https://github.com/IITII/AutoV2ray.git`
-3. cd dir & start install
-   1. Install server
-      1. Simplest: `cd AutoV2ray && bash v2ray.sh -w v2.google.com --ddns re35A5xFGdEzrRow`
-      2. Full: `cd AutoV2ray && bash v2ray.sh -t 1 -w v2.google.com --ddns re35A5xFGdEzrRow -p path -u 85d0e39a-4571-44da-80bb-caf5f853c2ba`
-      3. Add somthing else: `cd AutoV2ray && bash v2ray.sh -t 1 -w v2.google.com --ddns re35A5xFGdEzrRow -p path -u 85d0e39a-4571-44da-80bb-caf5f853c2ba && systemctl status v2ray nginx`
-   2. Install client
-      1. Simplest: `cd AutoV2ray && bash v2ray.sh -t 2 -w v2.google.com`
-      2. Full: `cd AutoV2ray && bash v2ray.sh -t 2 -w v2.google.com -p path -u 85d0e39a-4571-44da-80bb-caf5f853c2ba`
-      3. Add somthing else: `cd AutoV2ray && bash v2ray.sh -t 2 -w v2.google.com -p path -u 85d0e39a-4571-44da-80bb-caf5f853c2ba && systemctl status v2ray`
-4. If it is necessary to add ssh key to server. Please copy this repo and modify `ssh.pub` file, push it to your forked repo. Re-clone the repo from your's. Then add `&& cat ~/AutoV2ray/ssh.pub >> ~/.ssh/authorized_keys` command to the end of command line. Then, it will work.
-5. Enjoy yourself
+3. Follow some example
+4. Enjoy yourself
+### Example
+
+```bash
+git clone https://github.com/IITII/AutoV2ray.git && cd AutoV2ray
+
+bash ./v2ray -w "v2.google.com"
+bash ./v2ray -w "v2.google.com" 
+bash ./v2ray -w "v2.google.com"  -p "path"
+bash ./v2ray -w "v2.google.com"  -p "path" -u "85d0e39a-4571-44da-80bb-caf5f853c2ba" 
+bash ./v2ray -w "v2.google.com"  -p "path" -u "85d0e39a-4571-44da-80bb-caf5f853c2ba" --ddns "re35A5xFGdEzrRow"
+bash ./v2ray -w "v2.google.com"  -p "path" -u "85d0e39a-4571-44da-80bb-caf5f853c2ba" --sslPath "/etc/nginx/ssl"
+
+systemctl status v2ray nginx
+```
+----
 
 ```bash
 root@test-machine# bash v2ray.sh
 Usage:
-  ./v2ray.sh -h, --help            Show this page
-  ./v2ray.sh -t:                   Install, default "server"
-    ./v2ray.sh -t 1                Install server
-    ./v2ray.sh -t 2                Install client
-  ./v2ray.sh -w                    siteName
-  ./v2ray.sh -p, --path            v2ray web socket path
-                              default "/bin/date +"%S" | /usr/bin/base64"
-  ./v2ray.sh -u                    v2ray uuid
-  ./v2ray.sh --ddns                dns.he.net ddns's key
-
+  draft/v2ray.sh -h, --help            Show this page
+  draft/v2ray.sh -w                    siteName
+  draft/v2ray.sh -p, --path            v2ray web socket path, default "/bin/date +"%S" | /usr/bin/base64"
+  draft/v2ray.sh -u, --uuid            v2ray uuid
+  draft/v2ray.sh --ddns                dns.he.net ddns's key
+  draft/v2ray.sh --sslPath             ssl cert path
 ```
 ### Debug
-* `cat /var/v2ray/config.json` & `cat /etc/nginx/sites-enabled/default` will help you a lot.
+* `systemctl status v2ray nginx` & `cat /var/v2ray/config.json` & `cat /etc/nginx/sites-enabled/default` will help you a lot.
