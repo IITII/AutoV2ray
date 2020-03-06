@@ -13,7 +13,9 @@ declare he_net_ddns_key=$2
 declare SSL_PATH=$3
 declare release="ubuntu"
 declare SLEEP_TIME=3
-declare ACME_DIR="/opt/acme"
+
+#  Auto scan & update the out-of-date certs
+declare ACME_DIR="/root/.acme"
 CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Colors
 RED='\033[0;31m'
@@ -57,6 +59,8 @@ check_release() {
         release="ubuntu"
     elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
         release="centos"
+    elif cat /etc/issue | grep -Eqi "alpine"; then
+        release="alpine"
     elif cat /proc/version | grep -Eqi "debian"; then
         release="debian"
     elif cat /proc/version | grep -Eqi "ubuntu"; then
@@ -79,6 +83,9 @@ check_command() {
         if [[ "$1" = "centos" ]]; then
             yum update >/dev/null 2>&1
             yum -y install $3 >/dev/null 2>&1
+        elif [[ "$1" = "alpine" ]]; then
+            apk update >/dev/null 2>&1
+            apk --no-cache add $3 >/dev/null 2>&1
         else
             apt-get update >/dev/null 2>&1
             apt-get install $3 -y >/dev/null 2>&1

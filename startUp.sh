@@ -86,7 +86,7 @@ main() {
     if [[ -z ${SSL_PATH} ]]; then
         _SSL_PATH=""
     fi
-    cd /root/AutoV2ray &&
+    cd /tmp/AutoV2ray &&
         bash v2ray.sh ${_SITE_NAME} ${_DDNS_KEY} ${_WS_PATH} ${_UUID} ${SSL_PATH} \
             >>/var/log/v2ray_install.log 2>&1
 }

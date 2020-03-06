@@ -68,6 +68,8 @@ check_release() {
         release="ubuntu"
     elif cat /etc/issue | grep -Eqi "centos|red hat|redhat"; then
         release="centos"
+    elif cat /etc/issue | grep -Eqi "alpine"; then
+        release="alpine"
     elif cat /proc/version | grep -Eqi "debian"; then
         release="debian"
     elif cat /proc/version | grep -Eqi "ubuntu"; then
@@ -92,6 +94,9 @@ check_command() {
         if [[ "$1" = "centos" ]]; then
             yum update >/dev/null 2>&1
             yum -y install $3 >/dev/null 2>&1
+        elif [[ "$1" = "alpine" ]]; then
+            apk update >/dev/null 2>&1
+            apk --no-cache add $3 >/dev/null 2>&1
         else
             apt-get update >/dev/null 2>&1
             apt-get install $3 -y >/dev/null 2>&1
