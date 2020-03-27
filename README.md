@@ -56,3 +56,7 @@ Usage:
 ```
 ### Debug
 * `systemctl status v2ray nginx` & `cat /var/v2ray/config.json` & `cat /etc/nginx/sites-enabled/default` will help you a lot.
+
+### Play with docker ( Maybe unstable )
+* `docker run -d --name v2ray --restart always sikii/autov2ray`
+* `docker run -d --name v2ray -p 4433:443 -v /path/config.json:/etc/v2ray/config.json --restart always sikii/autov2ray`
