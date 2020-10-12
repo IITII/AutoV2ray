@@ -7,6 +7,8 @@
 ## Notice
 1. v2ray will use self-signed certificate if you don't give a [dns.he.net](https://dns.he.net) ddns_key and sslPath either
 2. Honestly, I don't recommend the self-signed certificates
+3. Due to the safety reason, I disabled `TLSv1.0` and use `TLS1.3` for TLS protocol. ( Why I am keeping TLSv1.2? Just for better compatibility)
+4. TLSv1.3 required **NGINX v1.13.0+**. So check your nginx version first if your install is failed.
 
 ### Pre-check
 1. Have a domain

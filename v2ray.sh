@@ -219,7 +219,7 @@ main() {
     /bin/cat ${CURRENT_DIR}/conf/server.json | /bin/sed \
         -e "s/\"id\": \"\S\+/\"id\": \"$1\",/g" \
         -e "s/\"path\": \"\S\+/\"path\": \"\/$2\"/g" |
-        tee >/etc/v2ray/config.json
+        tee >/usr/local/etc/v2ray/config.json
     log "Reload v2ray..."
     service v2ray restart && log_success "Success"
     log "Enable auto start..." && systemctl enable v2ray && log_success "Success"
@@ -298,7 +298,8 @@ done
 if ! ( (command -v v2ray) && (command -v v2ctl)) >/dev/null 2>&1; then
     log "Install main program..."
     rm -rf /usr/bin/v2ray
-    bash <(curl -L -s https://install.direct/go.sh) >/dev/null 2>&1
+    #See: https://github.com/v2fly/fhs-install-v2ray/blob/master/README.zh-Hans-CN.md
+    bash <(curl -L https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh) >/dev/null 2>&1
     pre_command_run_status
 else
     log_prompt "Already installed"
