@@ -59,6 +59,21 @@ Usage:
 ### Debug
 * `systemctl status v2ray nginx` & `cat /var/v2ray/config.json` & `cat /etc/nginx/sites-enabled/default` will help you a lot.
 
-### Play with docker ( Maybe unstable )
-* `docker run -d --name v2ray --restart always sikii/autov2ray`
-* `docker run -d --name v2ray -p 4433:443 -v /path/config.json:/etc/v2ray/config.json --restart always sikii/autov2ray`
+### Upgrade or re-deploy
+
+* Using config from config file
+
+> Sample  
+> re-deploy from www.google.com to v2.google.com  
+
+```bash
+v2() {
+    domain="$1.google.com"
+    vpath=$(cat /usr/local/etc/v2ray/config.json | grep -e 'path' -e 'id' | awk -v FS='"' '{print $4}' | grep '/' | sed 's/\///g')
+    vuuid=$(cat /usr/local/etc/v2ray/config.json | grep -e 'path' -e 'id' | awk -v FS='"' '{print $4}' | grep '/' -v)
+    echo "$domain $vpath $vuuid"
+    ./v2ray.sh -w $domain -p $vpath -u $vuuid --ddns $domain
+}
+# cd AutoV2ray
+v2 v2
+```
