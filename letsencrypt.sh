@@ -119,6 +119,9 @@ acme_sh() {
         ./acme.sh --install --home ${ACME_DIR}
     pre_command_run_status
     cd ${CURRENT_DIR}
+    log "Set default CA to letsencrypt"
+    ${ACME_DIR}/acme.sh --set-default-ca --server letsencrypt
+    pre_command_run_status
     log "Generating ssl file..."
     ${ACME_DIR}/acme.sh --issue -d ${siteName} --nginx
     pre_command_run_status
