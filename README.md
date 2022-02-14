@@ -4,6 +4,20 @@
 
 **[简体中文](https://iitii.github.io/2020/02/08/1/)**
 
+* quick start
+```bash
+git clone https://github.com/IITII/AutoV2ray.git && cd AutoV2ray
+
+
+site="baidu.com" && \
+./v2ray.sh -w $site --ddns $site
+
+site="baidu.com" && \
+siteName=$site && \
+he_net_ddns_key=$site && \
+curl -4 "https://$siteName:$he_net_ddns_key@dyn.dns.he.net/nic/update?hostname=$siteName"
+```
+
 ## Notice
 1. v2ray will use self-signed certificate if you don't give a [dns.he.net](https://dns.he.net) ddns_key and sslPath either
 2. Honestly, I don't recommend the self-signed certificates
@@ -77,3 +91,10 @@ v2() {
 # cd AutoV2ray
 v2 v2
 ```
+
+### Problems
+> all problems is fixed on last commit  
+
+* invalid user: VMessAEAD is enforced and a non VMessAEAD connection is received.
+> set `alterId: 0` at client OR `Environment="V2RAY_VMESS_AEAD_FORCED=false"` to Service
+* clashX configure sample base on ClashX 1.90.0+
