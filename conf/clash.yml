@@ -1,0 +1,21 @@
+proxies:
+  # vmess
+  # cipher support auto/aes-128-gcm/chacha20-poly1305/none
+  - name: v2ray.com
+    type: vmess
+    server: v2ray.com
+    port: 443
+    uuid: ruuid
+    alterId: 0
+    cipher: auto
+    # udp: true
+    tls: true
+    skip-cert-verify: false
+    # servername: example.com # priority over wss host
+    network: ws
+    ws-opts:
+      path: /path
+      headers:
+        Host: v2ray.com
+      max-early-data: 2048
+      early-data-header-name: Sec-WebSocket-Protocol

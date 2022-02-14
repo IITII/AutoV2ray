@@ -12,7 +12,7 @@ declare siteName=$1
 declare he_net_ddns_key=$2
 declare SSL_PATH=$3
 declare release="ubuntu"
-declare SLEEP_TIME=3
+declare SLEEP_TIME=5
 
 #  Auto scan & update the out-of-date certs
 declare ACME_DIR="/root/.acme"
@@ -122,6 +122,7 @@ acme_sh() {
     log "Set default CA to letsencrypt"
     ${ACME_DIR}/acme.sh --set-default-ca --server letsencrypt
     pre_command_run_status
+    sleep 1
     log "Generating ssl file..."
     ${ACME_DIR}/acme.sh --issue -d ${siteName} --nginx
     pre_command_run_status
@@ -139,7 +140,7 @@ acme_sh() {
 main() {
     # see https://dns.he.net/docs.html
     log "Update DDNS Record..."
-    curl -4 "https://$siteName:$he_net_ddns_key@dyn.dns.he.net/nic/update?hostname=$siteName" >/dev/null 2>&1
+    curl -4 "https://$siteName:$he_net_ddns_key@dyn.dns.he.net/nic/update?hostname=$siteName"
     pre_command_run_status
     log "Sleep $SLEEP_TIME s --> Time for dns record update."
     sleep ${SLEEP_TIME}

@@ -184,12 +184,18 @@ firewall_rule() {
     log "Finished!!!"
 }
 vmess_gen() {
-    temp=$(/bin/cat ${CURRENT_DIR}/conf/share.json | /bin/sed \
+    tempRaw=$(/bin/cat ${CURRENT_DIR}/conf/share.json | /bin/sed \
         -e "s/baidu.com\",$/$siteName\",/g" \
         -e "s/\"id\": \"\S\+/\"id\": \"$uuid\",/g" \
-        -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g" |
-        base64 -w 0)
+        -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g")
+    temp=$(echo $tempRaw | base64 -w 0)
     temp=$(echo vmess://${temp})
+    log_prompt "v2ray info: \n ${tempRaw}"
+    clash_yml=$(/bin/cat ${CURRENT_DIR}/conf/clash.yml | /bin/sed \
+        -e "s/v2ray.com/$siteName/g" \
+        -e "s/ruuid/$uuid/g" \
+        -e "s/\/path/\/$wsPath/g")
+    log_prompt "v2ray info for clash: \n ${clash_yml}"
     log_prompt "v2ray link: ${SKYBLUE}${temp}${PLAIN}"
     echo "${temp}" >/root/v2ray_link &&
         log_success "v2ray link save to /root/v2ray_link"

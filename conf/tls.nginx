@@ -4,12 +4,12 @@
 #   root path
 #   ws path
 server {
-    listen                     443 default_server;
+    listen 443 default_server ssl;
     server_name baidu.com;
-    ssl                        on;
+    # ssl on;
     root /var/www/html;
-    #index                      index.php index.html index.htm index.nginx-debian.html;
-    index                      index index.html index.htm index.nginx-debian.html;
+    # index index.php index.html index.htm index.nginx-debian.html;
+    index index index.html index.htm index.nginx-debian.html;
     ssl_certificate /etc/nginx/ssl/baidu.com/pem.pem;
     ssl_certificate_key /etc/nginx/ssl/baidu.com/key.key;
     ssl_session_timeout 1h;
@@ -25,34 +25,36 @@ server {
     ssl_stapling_verify on;
     # verify chain of trust of OCSP response using Root CA and Intermediate certs
     # ssl_trusted_certificate /path/to/ca.cer;
-    error_log                  /var/log/nginx/v2_error.log error;
-    access_log                 /var/log/nginx/v2_accss.log;
+    error_log /var/log/nginx/v2_error.log error;
+    access_log /var/log/nginx/v2_accss.log;
     location /china {
-        proxy_redirect            off;
-        proxy_pass                http://127.0.0.1:23233;
-        proxy_http_version        1.1;
-        proxy_set_header          Upgrade $http_upgrade;
-        proxy_set_header          Connection "upgrade";
-        proxy_set_header          Host $host;
-        #                         Show real IP in v2ray access.log
-        proxy_set_header          X-Real-IP $remote_addr;
-        proxy_set_header          X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_redirect off;
+        proxy_pass http://127.0.0.1:23233;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        # Show real IP in v2ray access.log
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # websocket 0-RTT max-early-data 支持
+        proxy_set_header Early-Data $ssl_early_data;
     }
     location / {
-        try_files                 $uri $uri/ =404;
+        try_files $uri $uri/ =404;
     }
 
-#    location ~ \.php$ {
-#        include                   snippets/fastcgi-php.conf;
-#        fastcgi_pass unix:/run/php/php7.2-fpm.sock;
-#    }
+    # location ~ \.php$ {
+    #     include snippets/fastcgi-php.conf;
+    #     fastcgi_pass unix:/run/php/php7.2-fpm.sock;
+    # }
 
     location ~ /\.ht {
-        deny                      all;
+        deny all;
     }
 }
 server {
-    listen                     80;
+    listen 80;
     server_name baidu.com;
-    rewrite                    ^(.*)$ https://$host$1 permanent;
+    rewrite ^(.*)$ https://$host$1 permanent;
 }
