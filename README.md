@@ -8,10 +8,27 @@
 ```bash
 git clone https://github.com/IITII/AutoV2ray.git && cd AutoV2ray
 
+## Manual add firewallcmd rules
+sudo -i
+sudo apt update -y && sudo apt install firewalld git -y
+sudo firewall-cmd --zone=public --permanent --add-port=22/tcp
+sudo firewall-cmd --zone=public --permanent --add-port=80/tcp
+sudo firewall-cmd --zone=public --permanent --add-port=443/tcp
+sudo firewall-cmd --reload
+sudo systemctl enable firewalld
+sudo systemctl status firewalld nginx v2ray
+sudo systemctl start firewalld
 
+## enable bbr via add kernel param
+echo "net.core.default_qdisc=fq" >>/etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >>/etc/sysctl.conf
+sysctl -p
+
+## quick deploy
 site="baidu.com" && \
 ./v2ray.sh -w $site --ddns $site
 
+## update ddns record base on dns.he.net
 site="baidu.com" && \
 siteName=$site && \
 he_net_ddns_key=$site && \
