@@ -38,7 +38,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         # websocket 0-RTT max-early-data 支持
-        proxy_set_header Early-Data $ssl_early_data;
+        # proxy_set_header Early-Data $ssl_early_data;
     }
     location / {
         try_files $uri $uri/ =404;

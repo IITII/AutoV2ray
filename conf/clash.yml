@@ -17,5 +17,5 @@ proxies:
       path: /path
       headers:
         Host: v2ray.com
-      max-early-data: 2048
-      early-data-header-name: Sec-WebSocket-Protocol
+      # max-early-data: 2048
+      # early-data-header-name: Sec-WebSocket-Protocol
