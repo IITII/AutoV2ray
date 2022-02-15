@@ -190,14 +190,14 @@ vmess_gen() {
         -e "s/\"path\": \"\S\+/\"path\": \"\/$wsPath\",/g")
     temp=$(echo $tempRaw | base64 -w 0)
     temp=$(echo vmess://${temp})
-    log_prompt "v2ray info: \n ${tempRaw}"
     clash_yml=$(/bin/cat ${CURRENT_DIR}/conf/clash.yml | /bin/sed \
         -e "s/v2ray.com/$siteName/g" \
         -e "s/ruuid/$uuid/g" \
         -e "s/\/path/\/$wsPath/g")
+    log_prompt "v2ray info: \n ${tempRaw}"
     log_prompt "v2ray info for clash: \n ${clash_yml}"
     log_prompt "v2ray link: ${SKYBLUE}${temp}${PLAIN}"
-    echo "${temp}" >/root/v2ray_link &&
+    echo "${tempRaw} \n ${clash_yml} \n ${temp}" >/root/v2ray_link &&
         log_success "v2ray link save to /root/v2ray_link"
 }
 main() {
