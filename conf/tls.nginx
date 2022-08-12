@@ -10,6 +10,9 @@ server {
     root /var/www/html;
     # index index.php index.html index.htm index.nginx-debian.html;
     index index index.html index.htm index.nginx-debian.html;
+    add_header Access-Control-Allow-Origin * always;
+    add_header Access-Control-Allow-Headers *;
+    add_header Access-Control-Allow-Methods *;
     ssl_certificate /etc/nginx/ssl/baidu.com/pem.pem;
     ssl_certificate_key /etc/nginx/ssl/baidu.com/key.key;
     ssl_session_timeout 1h;
