@@ -99,14 +99,14 @@ Usage:
 
 ```bash
 v2() {
-    domain="$1.google.com"
+    domain="$1"
     vpath=$(cat /usr/local/etc/v2ray/config.json | grep -e 'path' -e 'id' | awk -v FS='"' '{print $4}' | grep '/' | sed 's/\///g')
     vuuid=$(cat /usr/local/etc/v2ray/config.json | grep -e 'path' -e 'id' | awk -v FS='"' '{print $4}' | grep '/' -v)
     echo "$domain $vpath $vuuid"
     ./v2ray.sh -w $domain -p $vpath -u $vuuid --ddns $domain
 }
 # cd AutoV2ray
-v2 v2
+v2 v2.google.com
 ```
 
 ### Problems
