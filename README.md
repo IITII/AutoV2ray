@@ -98,6 +98,7 @@ Usage:
 > re-deploy from www.google.com to v2.google.com  
 
 ```bash
+domain=v2.google.com
 v2() {
     domain="$1"
     vpath=$(cat /usr/local/etc/v2ray/config.json | grep -e 'path' -e 'id' | awk -v FS='"' '{print $4}' | grep '/' | sed 's/\///g')
@@ -105,8 +106,7 @@ v2() {
     echo "$domain $vpath $vuuid"
     ./v2ray.sh -w $domain -p $vpath -u $vuuid --ddns $domain
 }
-# cd AutoV2ray
-v2 v2.google.com
+rm -rf " /etc/nginx/ssl/$domain" && v2 $domain
 ```
 
 ### Problems
