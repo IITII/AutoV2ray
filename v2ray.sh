@@ -133,7 +133,7 @@ pre_check_var() {
     fi
     if [[ -z ${uuid} ]]; then
         log "uuid is Empty, Generating..."
-        uuid=$(v2ctl uuid)
+        uuid=$(v2ray uuid)
         log "Now uuid is $uuid"
     fi
     if [[ -z ${wsPath} ]]; then
@@ -154,8 +154,8 @@ pre_check_var() {
         log "Generate self signed cert..."
         sslPath=${nginx_default_ssl}/${siteName}
         check_path ${sslPath}
-        v2ctl cert -ca -expire 8760h -file ${sslPath}/v2 \
-            -name "${siteName}" -org "${siteName}" -domain "${siteName}" >/dev/null 2>&1
+        v2ray tls cert --ca --expire=8760h --file=${sslPath}/v2 \
+        --name="${siteName}" --org="${siteName}" --domain="${siteName}" >/dev/null 2>&1
         ssl_pub_key ${sslPath} ${CURRENT_DIR}
     fi
     if [[ ${flag} -eq 0 ]]; then
